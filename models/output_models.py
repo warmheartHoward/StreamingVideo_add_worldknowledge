@@ -35,9 +35,9 @@ class OutputResponse(BaseModel):
     """Response entry in the output, with content filled."""
 
     content: str
-    st_time: str = ""
-    end_time: str = ""
-    time: float
+    st_time: float = 0.0
+    end_time: float = 0.0
+    time: float = 0.0
     logits: OutputLogits
 
 

@@ -74,8 +74,8 @@ class JSONLWriter:
             ),
             response=OutputResponse(
                 content=content,
-                st_time="",
-                end_time="",
+                st_time=fg.response_st_time,
+                end_time=fg.response_end_time,
                 time=fg.response_time,
                 logits=logits,
             ),

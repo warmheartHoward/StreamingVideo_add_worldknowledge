@@ -79,16 +79,25 @@ class DatasetReader:
                 question = qa.question
 
                 for resp_idx, resp in enumerate(qa.response):
-                    filenames, paths = self._find_nearby_frames(
-                        timestamp=resp.time,
-                        available_frames=available_frames,
-                        frames_dir=frames_dir,
-                    )
+                    # Use st_time/end_time range if available, fallback to time point
+                    if resp.st_time > 0 and resp.end_time > 0:
+                        filenames, paths = self._find_frames_in_range(
+                            st_time=resp.st_time,
+                            end_time=resp.end_time,
+                            available_frames=available_frames,
+                            frames_dir=frames_dir,
+                        )
+                    else:
+                        filenames, paths = self._find_nearby_frames(
+                            timestamp=resp.time,
+                            available_frames=available_frames,
+                            frames_dir=frames_dir,
+                        )
 
                     if not filenames:
                         logger.warning(
                             f"[{sample_id}][qa{qa_idx}][resp{resp_idx}] "
-                            f"No frames found near t={resp.time}s, skipping"
+                            f"No frames found for t=[{resp.st_time},{resp.end_time}]/{resp.time}s, skipping"
                         )
                         continue
 
@@ -103,6 +112,8 @@ class DatasetReader:
                         response_index=resp_idx,
                         question_content=question.content,
                         question_time=question.time,
+                        response_st_time=resp.st_time,
+                        response_end_time=resp.end_time,
                         response_time=resp.time,
                         original_logits=logits_dict,
                         frame_paths=paths,
@@ -115,6 +126,48 @@ class DatasetReader:
             f"from {len(documents)} document(s)"
         )
         return frame_groups
+
+    def _find_frames_in_range(
+        self,
+        st_time: float,
+        end_time: float,
+        available_frames: set[str],
+        frames_dir: Path,
+    ) -> tuple[list[str], list[str]]:
+        """Find frames uniformly sampled from [st_time, end_time] range.
+
+        Collects all available frames within the range, then uniformly
+        samples up to max_frames from them.
+
+        Returns:
+            (filenames, absolute_paths) - parallel lists
+        """
+        # Collect all frames in the range at 0.10s granularity
+        in_range: list[tuple[float, str]] = []
+        t = round(st_time, 2)
+        while t <= end_time + 0.05:  # small epsilon for float rounding
+            if t < 0:
+                t = round(t + 0.1, 2)
+                continue
+            fname = self._timestamp_to_filename(t)
+            if fname in available_frames:
+                in_range.append((t, fname))
+            t = round(t + 0.1, 2)
+
+        if not in_range:
+            return [], []
+
+        # Uniformly sample max_frames from the range
+        if len(in_range) <= self._max_frames:
+            selected = in_range
+        else:
+            step = len(in_range) / self._max_frames
+            indices = [int(i * step) for i in range(self._max_frames)]
+            selected = [in_range[i] for i in indices]
+
+        filenames = [fname for _, fname in selected]
+        paths = [str(frames_dir / fname) for fname in filenames]
+        return filenames, paths
 
     def _find_nearby_frames(
         self,

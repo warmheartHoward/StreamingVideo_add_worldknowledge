@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 
 class GeminiConfig(BaseModel):
     api_key: str = ""
+    base_url: str = ""
     model: str = "gemini-2.5-flash"
     temperature: float = 0.2
     max_retries: int = 5

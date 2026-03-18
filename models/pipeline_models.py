@@ -23,6 +23,8 @@ class FrameGroup(BaseModel):
     response_index: int
     question_content: str
     question_time: float
+    response_st_time: float
+    response_end_time: float
     response_time: float
     original_logits: dict
     frame_paths: list[str]

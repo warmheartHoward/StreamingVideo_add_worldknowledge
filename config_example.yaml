@@ -2,8 +2,11 @@
 # Copy this file to config.yaml and fill in your settings.
 
 gemini:
-  # Gemini API key. Also reads from GEMINI_API_KEY environment variable.
+  # API key. Also reads from GEMINI_API_KEY environment variable.
   api_key: "your-api-key-here"
+
+  # OpenAI-compatible API endpoint (e.g. proxy URL)
+  base_url: "http://az.gptplus5.com/v1"
 
   # Model to use for nameplate detection
   model: "gemini-2.5-flash"

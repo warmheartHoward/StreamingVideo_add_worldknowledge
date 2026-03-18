@@ -25,9 +25,9 @@ class ResponseEntry(BaseModel):
     """A single response in a QA pair. In our input, content is empty."""
 
     content: str = ""
-    st_time: str = ""
-    end_time: str = ""
-    time: float
+    st_time: float = 0.0
+    end_time: float = 0.0
+    time: float = 0.0
     logits: Logits
 
 
