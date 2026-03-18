@@ -1,0 +1,68 @@
+# Worldknowledge Complement Pipeline - Configuration Template
+# Copy this file to config.yaml and fill in your settings.
+
+gemini:
+  # Gemini API key. Also reads from GEMINI_API_KEY environment variable.
+  api_key: "your-api-key-here"
+
+  # Model to use for nameplate detection
+  model: "gemini-2.5-flash"
+
+  # Lower temperature for more deterministic OCR results
+  temperature: 0.2
+
+  # Max retry attempts on transient API errors (exponential backoff)
+  max_retries: 5
+
+  # Base delay (seconds) for exponential backoff: wait = min(base * 2^attempt, 60)
+  retry_base_delay: 1.0
+
+  # Request timeout in seconds
+  timeout: 120
+
+pipeline:
+  # Max concurrent Gemini API calls (controlled via asyncio.Semaphore)
+  concurrency: 10
+
+  # Seconds around response.time to search for nearby frames
+  frame_search_radius: 0.5
+
+  # Max number of frames to select per response timestamp
+  frame_search_count: 3
+
+  # Text used for negative samples (no legible nameplate detected)
+  refusal_text: "抱歉，由于画面中未展示该文物的清晰铭牌信息，我无法提供准确的背景知识。"
+
+paths:
+  # Root directory containing sample subdirectories (each with frames/ and gt.json)
+  dataset_root: "./input"
+
+  # Output JSONL file path (append mode)
+  output_file: "./output/results.jsonl"
+
+  # Log directory
+  log_dir: "./logs"
+
+# Artifact Labeler (World Knowledge - Step D)
+# When enabled, positive samples go through the full labeling pipeline:
+# Phase 1: Search agent gathers evidence via internal search API
+# Phase 2: Writer LLM generates structured appraisal report
+labeler:
+  # Set to true to enable the real labeler (default: false = mock mode)
+  enabled: false
+
+  # OpenAI-compatible LLM endpoint for the search agent and writer
+  llm_api_key: "your-llm-api-key"
+  llm_base_url: "http://az.gptplus5.com/v1"
+  llm_model: "gemini-3.1-flash-lite-preview"
+
+  # Internal search API (大搜) credentials
+  search_api_url: "http://10.32.214.120:8080/server/penetrate/v2.0.0/knowledge/search_v2"
+  search_ws_url: "ws://10.32.214.120:8080/summary/generation"
+  search_secret_key: ""    # Also reads DASOU_SECRET_KEY env var
+  search_access_key: ""    # Also reads DASOU_ACCESS_KEY env var
+
+  # Search agent config
+  max_search_turns: 4      # Max tool-calling rounds per artifact
+  max_retries: 3           # Retries per artifact on failure
+  retry_delay: 2.0         # Seconds between retries
