@@ -24,13 +24,14 @@ gemini:
   timeout: 120
 
 pipeline:
-  # Max concurrent Gemini API calls (controlled via asyncio.Semaphore)
+  # Max concurrent VLM API calls (controlled via asyncio.Semaphore)
   concurrency: 10
 
-  # Seconds around response.time to search for nearby frames
+  # Seconds around response.time to search for nearby frames (single-point fallback mode)
   frame_search_radius: 0.5
 
-  # Max number of frames to select per response timestamp
+  # Max number of frames to select per response time range [st_time, end_time]
+  # Recommended: 3~6 for nameplate detection tasks
   frame_search_count: 3
 
   # Text used for negative samples (no legible nameplate detected)
